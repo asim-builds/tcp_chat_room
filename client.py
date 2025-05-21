@@ -19,10 +19,15 @@ def receive_messages(sock):
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((HOST, PORT))
     print(f"Connected to server at {HOST}:{PORT}")
+    
+    # Ask for a username
+    username = input("Enter your username: ")
+    s.sendall(username.encode()) # Send username to server
+    # print("You can start chatting! Type 'exit' to leave the chat.")
 
     # Start a thread to receive messages
     threading.Thread(target=receive_messages, args=(s,), daemon=True).start()
-    
+
     while True:
         message = input("You: ")
         if message.lower() == 'exit':

@@ -11,24 +11,29 @@ server_socket.listen()
 print(f"Server listening on {HOST}:{PORT}")
 
 clients = []  # List to keep track of connected clients
+usernames = {}  # Dictionary to map client sockets to usernames
 
 def handle_client(client_socket, addr):
-    print(f"Connected by {addr}")
-    while True:
-        try:
-            msg = client_socket.recv(1024)  # Buffer size is 1024 bytes
+    try:
+        username = client_socket.recv(1024).decode()
+        usernames[client_socket] = username
+        print(f"{username} connected from {addr}")
+        while True:
+            msg = client_socket.recv(1024)
             if not msg:
-                break  # No message means the client has closed the connection
-            # Broadcast the message to all clients
+                break
+            full_msg = f"{username}: {msg.decode()}"
             for client in clients:
-                if client != client_socket:  # Don't send the message back to the sender
-                    client.sendall(msg)
-        except ConnectionResetError:
-            print(f"Connection reset by {addr}")
-            break
-    client_socket.close()
-    clients.remove(client_socket)
-    print(f"Connection closed by {addr}")
+                if client != client_socket:
+                    client.sendall(full_msg.encode())
+    except ConnectionResetError:
+        print(f"Connection reset by {addr}")
+    finally:
+        client_socket.close()
+        clients.remove(client_socket)
+        print(f"Connection closed by {addr}")
+        if client_socket in usernames:
+            del usernames[client_socket]
 
 while True:
     client_socket, addr = server_socket.accept()
