@@ -11,7 +11,7 @@ def receive_messages(sock):
             if not msg:
                 print("Disconnected from server.")
                 break  # No message means the server has closed the connection
-            print("\rFriend: " + msg.decode() + "\nYou: ", end="")
+            print("\r(Friend) " + msg.decode() + "\nYou: ", end="")
         except ConnectionResetError:
             print("Connection reset by server")
             break

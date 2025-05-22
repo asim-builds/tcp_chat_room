@@ -1,5 +1,6 @@
 import socket
 import threading # For handling multiple clients
+from datetime import datetime # For timestamping messages
 
 # This is a simple server that listens for incoming connections and can handle multiple clients.
 HOST = '127.0.0.1'  # Localhost
@@ -18,17 +19,32 @@ def handle_client(client_socket, addr):
         username = client_socket.recv(1024).decode()
         usernames[client_socket] = username
         print(f"{username} connected from {addr}")
+
+        # Notify all clients about the new connection
+        join_msg = f"*** {username} has joined the chat! ***"
+        for client in clients:
+            if client != client_socket:
+                client.sendall(join_msg.encode())
+
         while True:
             msg = client_socket.recv(1024)
             if not msg:
                 break
-            full_msg = f"{username}: {msg.decode()}"
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            full_msg = f"[{timestamp}] {username}: {msg.decode()}"
             for client in clients:
                 if client != client_socket:
                     client.sendall(full_msg.encode())
     except ConnectionResetError:
         print(f"Connection reset by {addr}")
     finally:
+        # Notify all clients about the disconnection
+        if client_socket in clients:
+            leave_msg = f"*** [{datetime.now().strftime('%H:%M:%S')}] {usernames[client_socket]} has left the chat! ***"
+            for client in clients:
+                if client != client_socket:
+                    client.sendall(leave_msg.encode())
+
         client_socket.close()
         clients.remove(client_socket)
         print(f"Connection closed by {addr}")
