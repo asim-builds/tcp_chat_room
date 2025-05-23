@@ -20,6 +20,11 @@ def handle_client(client_socket, addr):
         usernames[client_socket] = username
         print(f"{username} connected from {addr}")
 
+        current_users = [usernames[c] for c in clients if c != client_socket]
+        if current_users:
+            user_list_msg = "People in this room: " + ", ".join(current_users)
+            client_socket.sendall(user_list_msg.encode())
+
         # Notify all clients about the new connection
         join_msg = f"*** {username} has joined the chat! ***"
         for client in clients:
